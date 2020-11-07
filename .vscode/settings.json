@@ -1,0 +1,4 @@
+{
+    "python.pythonPath": "/Volumes/AllData/yr1_ca3_covid/covid_brief_backend/.venv/bin/python3.9",
+    "python.formatting.provider": "black"
+}

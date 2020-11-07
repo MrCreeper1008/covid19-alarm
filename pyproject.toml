@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "covid_brief_backend"
+version = "0.1.0"
+description = "The backend for covid19 daily brief project"
+authors = ["Kenneth <kenneth.ng.5226@outlook.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+Flask = "^1.1.2"
+requests = "^2.24.0"
+uk-covid19 = "^1.2.0"
+pyttsx3 = "^2.90"
+
+[tool.poetry.dev-dependencies]
+pylint = "^2.6.0"
+black = "^20.8b1"
+rope = "^0.18.0"
+
+[tool.poetry.scripts]
+start = "export FLASK_APP=server/__init__.py; flask run"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+virtualenvs.in-project = true
