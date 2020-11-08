@@ -18,7 +18,7 @@ You must obtain api keys from:
 - NewsAPI
 - OpenWeatherMap 
 
-```json
+```json5
 {
     "open_weather_api_key": "...", // api key of OpenWeatherMap
     "news_api_key": "..."          // api key of NewsAPI
