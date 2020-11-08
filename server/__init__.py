@@ -1,8 +1,8 @@
-'''
+"""
 The main server module.  
 The Flask instance is exported here:
 from server import server
-'''
+"""
 
 import json
 import os
@@ -18,6 +18,7 @@ import server.routes.alarms.route
 
 CONFIG_PATH = "config.json"
 LOG_PATH = "server.log"
+
 
 def __setup_server():
     """
@@ -50,5 +51,6 @@ def __load_envs():
 
         for key, val in configs.items():
             os.environ[key.upper()] = val
+
 
 __setup_server()
