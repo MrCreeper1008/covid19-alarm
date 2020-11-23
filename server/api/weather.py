@@ -1,7 +1,12 @@
-import requests
+"""
+This module handles interactions with the OpenWeather api
+"""
+
 import logging
 import os
 from typing import Dict
+
+import requests
 
 OPEN_WEATHER_API_URL = "https://api.openweathermap.org/data/2.5"
 
@@ -12,7 +17,8 @@ def fetch_weather(lat: float, long: float) -> Dict[str, any]:
 
     :param lat: The latitude of user location
     :param long: The longitude of user location
-    :returns: A dictionary of information of the current weather, as described in the OpenWeather api doc
+    :returns: A dictionary of information of the current weather,
+    as described in the OpenWeather api doc
     """
 
     # the request parameters required for the api call

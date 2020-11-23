@@ -1,9 +1,13 @@
+"""
+This module handles http response formatting
+"""
+
 from typing import Dict
 
-"""Represent HTTP status code 400 Bad Request"""
+# Represent HTTP status code 400 Bad Request
 HTTP_BAD_REQUEST = 400
 
-"""Indicates that the request contains invalid parameters"""
+# Indicates that the request contains invalid parameters
 ERRCODE_INVALID_PARAMETERS = "INVALID_PARAMETERS"
 
 

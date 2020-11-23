@@ -1,7 +1,12 @@
-import requests
-import os
+"""
+This module handles interactions with NewsAPI
+"""
+
 import logging
+import os
 from typing import List, Dict
+
+import requests
 
 NEWS_API_URL = "https://newsapi.org"
 
@@ -20,5 +25,5 @@ def fetch_news_headlines(country: str) -> List[Dict[str, any]]:
     try:
         response = requests.get(f"{NEWS_API_URL}/v2/top-headlines", params=req_params)
         return response.json()
-    except requests.ConnectionError as e:
-        logging.error(e.strerror)
+    except requests.ConnectionError as conn_err:
+        logging.error(conn_err.strerror)

@@ -12,7 +12,7 @@ Flask backend powering covid19 alarm clock.
 
 ## Configuration
 
-All configuration of this project is stored in `./config.json`.  
+All configuration of this project is stored in `./config.json`.
 
 You must obtain api keys from:
 - NewsAPI

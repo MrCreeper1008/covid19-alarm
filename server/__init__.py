@@ -1,5 +1,5 @@
 """
-The main server module.  
+The main server module.
 The Flask instance is exported here:
 from server import server
 """
@@ -7,13 +7,17 @@ from server import server
 import json
 import os
 import logging
-from flask import Flask
 from typing import Dict
+from flask import Flask
 
 # Creates a new instance of Flask
 app = Flask(__name__)
 
 # import routes defined in other modules
+
+# ignoring pylint warning here because this import is used to initialize Flask routes
+# and they must be imported *after* Flask is initialized.
+# pylint: disable=wrong-import-position, unused-import
 import server.routes.alarms.route
 
 CONFIG_PATH = "config.json"
