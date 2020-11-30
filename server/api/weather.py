@@ -34,3 +34,4 @@ def fetch_weather(lat: float, long: float) -> Dict[str, any]:
         return response.json()
     except requests.ConnectionError as req:
         logging.error(req.strerror)
+        return {}

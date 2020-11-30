@@ -1,7 +1,9 @@
 """
 This module handles all the api routing for this server.
 """
-from flask import request
+import os
+
+from flask import request, render_template
 
 from server import app
 from server.http_response import (
@@ -12,14 +14,21 @@ from server.http_response import (
 )
 from server.utils.logger import log_api_call
 from .alarm_scheduler import cancel_alarm, schedule_alarm
-from .notification import daily_brief
+from .notification import daily_brief, get_notifications
+
 
 @app.route("/")
-def test():
+def render_interface():
     """
-    A test api endpoint.
+    Renders the main alarm interface using the template specified in config.interface_template
     """
-    return "Hello world"
+
+    notifications = get_notifications()
+
+    return render_template(
+        os.environ["INTERFACE_TEMPLATE"],
+        notifications=notifications,
+    )
 
 
 @app.route("/alarm", methods=["POST"])
