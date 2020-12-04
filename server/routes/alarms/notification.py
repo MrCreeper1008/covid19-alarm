@@ -2,79 +2,63 @@
 This module handles notifications
 """
 
-import logging
-from typing import List, Dict, Set
+import datetime
+from typing import List, Dict, Set, Any, Tuple
 
-import pyttsx3
-from server.api.weather import fetch_weather
+from flask import Markup
+
 from server.api.news import fetch_news_headlines, calculate_news_id
-
-__speech_engine = pyttsx3.init()
+from server.api.weather import fetch_weather
+from server.api.covid import fetch_covid_data
 
 # stores a list of notifications of news headlines in the shape of
 # {
 #     "title": "title of the notification",
 #     "content": "Content of the notification",
 # }
-__notifications: List[Dict[str, str]] = []
+__notifications: Dict[str, Dict[str, Any]] = {}
 
-# stores a list of ids of news that have been displayed to the user as notifications,
-# calculated by the api.news.calculate_news_id function.
-__old_news: Set[int] = set()
+# the set of removed notifications. they will never show up again.
+__removed_notifications: Set[str] = set()
+
+__WEATHER_NOTIFICATION_ID = "weather"
 
 
-def daily_brief():
+def get_notifications(refresh: bool = True) -> List[Dict[str, str]]:
     """
-    Gives the user a brief of the current weather, the top news, and the local covid infection rate.
-    """
+    Get a list of notifications.
 
-    logging.info("daily brief")
-
-    weather = fetch_weather(lat=50.718410, long=-3.533899)
-    news = fetch_news_headlines(country="gb")
-
-    brief_message = f"""
-    Currently in your location, expect {weather['weather'][0]['description']}.
-    The temperature is {weather['main']['temp']}.
+    :params refresh: Whether to get new news. If false, the existing notifications will be returned
+    :returns: The list of notifications
     """
 
-    if len(news["articles"]) == 0:
-        brief_message += "There are no top news for you right now."
-    else:
-        brief_message += (
-            "Also, here are some top news headlines for you.\n"
-            + "\n".join([f"{article['title']}; " for article in news["articles"]])
-        )
+    if refresh:
+        covid_notification_id, covid_notification = __create_covid_notification()
+        weather_notification_id, weather_notification = __create_weather_notification()
 
-    logging.info("brief message: %s", brief_message)
-    __speech_engine.say(brief_message)
-    __speech_engine.runAndWait()
+        __notifications[covid_notification_id] = covid_notification
+        __notifications[weather_notification_id] = weather_notification
 
+        news_headlines = fetch_news_headlines(country="gb")
 
-def get_notifications() -> List[Dict[str, str]]:
-    """
-    Get a list of notifications
-    """
-    notifications: List[Dict[str, str]] = []
-    news_headlines = fetch_news_headlines(country="gb")
+        for news_headline in news_headlines:
+            news_title = news_headline["title"]
+            news_description = news_headline["description"]
 
-    for news_headline in news_headlines:
-        news_title = news_headline["title"]
-        news_description = news_headline["description"]
+            news_id = calculate_news_id(title=news_title, description=news_description)
 
-        print(news_title, news_description)
+            if (
+                not news_id
+                or news_id in __notifications
+                or news_id in __removed_notifications
+            ):
+                continue
 
-        news_id = calculate_news_id(title=news_title, description=news_description)
+            __notifications[news_id] = __create_notification(
+                title=news_title, content=news_description
+            )
 
-        if not news_id or news_id in __old_news:
-            continue
-
-        __old_news.add(news_id)
-        notifications.append(
-            __create_notification(title=news_title, content=news_description)
-        )
-
-    return notifications
+    return __notifications.values()
 
 
 def remove_notification(title: str = ""):
@@ -84,13 +68,16 @@ def remove_notification(title: str = ""):
     :params title: The title of the notification to be deleted.
     """
 
-    for notification in enumerate(__notifications):
+    for notification_id, notification in __notifications.items():
+        # find the notification dict with matching title
         if notification["title"] == title:
-            __notifications.remove(notification)
+            __notifications.pop(notification_id)
+            __removed_notifications.add(notification_id)
+
             break
 
 
-def __create_notification(title: str, content: str) -> Dict[str, str]:
+def __create_notification(title: str, content: str) -> Dict[str, Any]:
     """
     Creates a notification "object" from the given title and content.
 
@@ -99,3 +86,61 @@ def __create_notification(title: str, content: str) -> Dict[str, str]:
     :returns A dictionary representing a notification "object".
     """
     return {"title": title, "content": content}
+
+
+def __create_covid_notification() -> Tuple[str, Dict[str, Any]]:
+    """
+    Generates a Covid19 notification containing latest information about the pandemic.
+
+    :returns: A tuple, first item being the id of the notification,
+    second being the notification itself.
+    """
+    _, last_updated_on, new_cases, total_cases, __, ___ = fetch_covid_data()
+
+    covid_notification_id = __covid_notification_id(
+        last_updated_on, new_cases, total_cases
+    )
+
+    return covid_notification_id, __create_notification(
+        title="Covid19 Data",
+        content=Markup(
+            f"""Data last updated on: <strong>{last_updated_on}</strong> <br>
+New cases: <strong>{new_cases}</strong> <br>
+Total cases: <strong>{total_cases}</strong>"""
+        ),
+    )
+
+
+def __create_weather_notification() -> Tuple[str, Dict[str, Any]]:
+    """
+    Generates a weather notification containing latest weather information
+
+    :returns: A tuple, first item being the id of the notification,
+    second being the notification itself.
+    """
+    weather = fetch_weather(lat=50.718410, long=-3.533899)
+
+    return __WEATHER_NOTIFICATION_ID, __create_notification(
+        title="Current weather",
+        content=Markup(
+            f"""Temperature: <strong>{weather["main"]["temp"]} °C</strong> <br>
+Feels like: <strong>{weather["main"]["feels_like"]} °C</strong> <br>
+Humidity: <strong>{weather["main"]["humidity"]}</strong>"""
+        ),
+    )
+
+
+def __covid_notification_id(
+    last_updated_on: datetime.datetime,
+    new_case_number: int,
+    total_case_number: int,
+) -> str:
+    """
+    Generates a notification ID for covid notifications.
+
+    :params last_updated_on: The date the covid data is last updated on
+    :params new_case_number: Number of new covid cases according to the data
+    :params total_case_number: Number of total covid cases according to the data
+    :returns: A notification ID to identify the covid notification
+    """
+    return f"covid_{last_updated_on}_{new_case_number + total_case_number}"

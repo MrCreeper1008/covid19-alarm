@@ -9,6 +9,8 @@ from functools import reduce
 
 import requests
 
+from server.utils.logger import log_exception
+
 NEWS_API_URL = "https://newsapi.org"
 
 
@@ -25,9 +27,11 @@ def fetch_news_headlines(country: str) -> List[Dict[str, any]]:
 
     try:
         response = requests.get(f"{NEWS_API_URL}/v2/top-headlines", params=req_params)
-        return response.json()["articles"]
+        json = response.json()
+
+        return json["articles"]
     except requests.ConnectionError as conn_err:
-        logging.error(conn_err.strerror)
+        log_exception("fetch_news_headlines", conn_err)
         return []
 
 
@@ -41,7 +45,7 @@ def calculate_news_id(title: str = "", description: str = "") -> hex:
         assert calculate_news_id(
             title="example title",
             description="example description"
-        ) == hex('0xcde')
+        ) == hex(0xcde)
 
     :params title: Title of the news headline.
     :params description: Description of the news headline.
@@ -50,10 +54,13 @@ def calculate_news_id(title: str = "", description: str = "") -> hex:
     """
 
     try:
+        if not isinstance(title, str) or not isinstance(description, str):
+            raise ValueError()
+
         return hex(
             reduce(
                 lambda final, char: final + ord(char),
-                (title or "" + description or "").lower(),
+                ((title or "") + (description or "")).lower(),
                 0,
             )
         )

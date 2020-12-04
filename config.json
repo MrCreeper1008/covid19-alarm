@@ -1,7 +1,7 @@
 {
     "open_weather_api_key": "eb97c883899aa13b93a148d3a21ae8e2",
     "news_api_key": "b63772922ccc4d3682b48a6b6f55e928",
-    "templates_path": "./templates",
-    "server_log_path": "./server.log",
+    "templates_path": "templates",
+    "server_log_path": "server.log",
     "interface_template": "template.html"
 }

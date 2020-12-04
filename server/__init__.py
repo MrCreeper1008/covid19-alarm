@@ -10,6 +10,8 @@ import logging
 from typing import Dict
 from flask import Flask
 
+from server.utils.logger import LoggerMiddleware
+
 CONFIG_PATH = "config.json"
 
 
@@ -29,10 +31,8 @@ def __init_logger():
     """
     logging.basicConfig(
         filename=os.environ["SERVER_LOG_PATH"],
-        encoding="utf-8",
         level=logging.DEBUG,
     )
-
 
 def __load_envs():
     """
@@ -54,8 +54,10 @@ __setup_server()
 # Creates a new instance of Flask
 app = Flask(__name__, template_folder=os.environ["TEMPLATES_PATH"])
 
-# import routes defined in other modules
+# Registers our LoggerMiddleware
+# app.wsgi_app = LoggerMiddleware(app)
 
+# Import routes defined in other modules.
 # ignoring pylint warning here because this import is used to initialize Flask routes
 # and they must be imported *after* Flask is initialized.
 # pylint: disable=wrong-import-position, unused-import
